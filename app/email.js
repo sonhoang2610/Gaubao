@@ -85,5 +85,62 @@
     return Promise.all(jobs);
   }
 
-  window.GauBaoEmail = { genOrderCode, nowString, money, sendOrderEmails };
+  async function saveOrderToSheet(cfg, order) {
+    if (!cfg || !cfg.enabled) throw new Error('Chưa bật lưu lên Google Sheet.');
+    if (!cfg.endpoint) throw new Error('Chưa cấu hình endpoint Google Sheet.');
+
+    const payload = {
+      order,
+      submittedAt: new Date().toISOString(),
+    };
+
+    const response = await fetch(cfg.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Lưu Google Sheet thất bại: ${response.status} ${text}`);
+    }
+
+    return response.json().catch(() => null);
+  }
+
+  // ---- Lưu cấu hình (cơ sở, liên hệ, v.v.) lên Google Sheet ----
+  async function saveConfigToSheet(endpoint, config) {
+    if (!endpoint) throw new Error('Chưa cấu hình endpoint Google Sheet.');
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'config', config }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Lưu config lên Sheet thất bại: ${response.status} ${text}`);
+    }
+
+    return response.json().catch(() => null);
+  }
+
+  // ---- Đọc cấu hình từ Google Sheet về ----
+  async function loadConfigFromSheet(endpoint) {
+    if (!endpoint) return null;
+
+    const url = endpoint + (endpoint.includes('?') ? '&' : '?') + 'action=getConfig';
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.warn('Không đọc được config từ Sheet:', response.status);
+      return null;
+    }
+
+    const result = await response.json().catch(() => null);
+    return result && result.config ? result.config : null;
+  }
+
+  window.GauBaoEmail = { genOrderCode, nowString, money, sendOrderEmails, saveOrderToSheet, saveConfigToSheet, loadConfigFromSheet };
 })();

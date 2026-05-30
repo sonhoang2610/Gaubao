@@ -20,6 +20,7 @@
       banners: Array.isArray(saved.banners) ? saved.banners : clone(seed.banners),
       contact: { ...clone(seed.contact), ...(saved.contact || {}) },
       email: { ...clone(seed.email), ...(saved.email || {}) },
+      sheet: { ...clone(seed.sheet), ...(saved.sheet || {}) },
       stores: Array.isArray(saved.stores) ? saved.stores : clone(seed.stores),
       products: Array.isArray(saved.products) ? saved.products : clone(seed.products),
     };

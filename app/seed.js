@@ -37,6 +37,13 @@ window.GAUBAO_SEED = {
     adminEmail: '',       // Email admin nhận đơn
   },
 
+  // --- Cấu hình lưu đơn hàng lên Google Sheet ---
+  // Chỉ cần nhập URL web app do Google Apps Script tạo.
+  sheet: {
+    enabled: false,
+    endpoint: '',
+  },
+
   // --- Cơ sở / chi nhánh ---
   stores: [
     {
