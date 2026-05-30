@@ -352,16 +352,22 @@ function AdminPanel({ data, onCommit, onClose }) {
 
               <div className="mt-8 bg-white rounded-2xl border border-stone-100 p-5 space-y-4 shadow-sm">
                 <label className="flex items-center justify-between gap-3 pb-3 border-b border-stone-100">
-                  <span className="text-sm font-bold text-stone-800">Bật lưu đơn lên Google Sheet</span>
+                  <span className="text-sm font-bold text-stone-800">Đồng bộ cấu hình lên Google Sheet</span>
                   <button onClick={() => update({ sheet: { ...draft.sheet, enabled: !draft.sheet.enabled } })} className={`relative w-12 h-7 rounded-full transition ${draft.sheet.enabled ? 'bg-orange-600' : 'bg-stone-300'}`}>
                     <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${draft.sheet.enabled ? 'left-6' : 'left-1'}`}></span>
                   </button>
                 </label>
-                <Field label="Google Apps Script URL" hint="URL web app do Google Apps Script tạo, dùng để ghi đơn vào Sheet.">
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
+                  <i className="fas fa-cloud-arrow-up mr-1.5"></i>
+                  Khi bật, mỗi lần bấm <b>Lưu</b> sẽ đồng bộ <b>cơ sở, liên hệ, cấu hình email</b> lên Google Sheet. Mở trang ở trình duyệt khác sẽ tự kéo dữ liệu từ Sheet về.
+                </div>
+
+                <Field label="Google Apps Script URL" hint="URL web app do Google Apps Script tạo, dùng để đồng bộ cấu hình.">
                   <input className={inputCls} value={draft.sheet.endpoint} onChange={(e) => update({ sheet: { ...draft.sheet, endpoint: e.target.value } })} placeholder="https://script.google.com/macros/s/xxxx/exec" />
                 </Field>
                 {draft.sheet.enabled && !draft.sheet.endpoint && (
-                  <p className="text-sm text-red-500 font-medium"><i className="fas fa-triangle-exclamation mr-1"></i> Nhập URL Google Sheet để lưu đơn được kích hoạt.</p>
+                  <p className="text-sm text-red-500 font-medium"><i className="fas fa-triangle-exclamation mr-1"></i> Nhập URL Apps Script để đồng bộ cấu hình.</p>
                 )}
               </div>
             </div>

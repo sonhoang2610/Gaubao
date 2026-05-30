@@ -56,7 +56,6 @@
       const [sending, setSending] = useState(false);
       const [lastOrder, setLastOrder] = useState(null);
       const [sendNotice, setSendNotice] = useState('');
-      const [sheetNotice, setSheetNotice] = useState('');
       const setCust = (k, v) => setCustomer((c) => ({ ...c, [k]: v }));
 
       // Cổng admin
@@ -87,12 +86,13 @@
         const res = S.saveData(newData);
         setData(S.clone(newData));
 
-        // Đồng bộ config (cơ sở, liên hệ) lên Google Sheet
+        // Đồng bộ toàn bộ config lên Google Sheet
         const sheetCfg = newData.sheet || {};
         if (sheetCfg.enabled && sheetCfg.endpoint) {
           const configToSync = {
             stores: newData.stores,
             contact: newData.contact,
+            email: newData.email,
           };
           window.GauBaoEmail.saveConfigToSheet(sheetCfg.endpoint, configToSync)
             .then(() => console.log('✓ Đã đồng bộ config lên Google Sheet.'))
@@ -114,6 +114,7 @@
                 ...prev,
                 stores: Array.isArray(remote.stores) && remote.stores.length ? remote.stores : prev.stores,
                 contact: remote.contact && remote.contact.phone ? { ...prev.contact, ...remote.contact } : prev.contact,
+                email: remote.email ? { ...prev.email, ...remote.email } : prev.email,
               };
               S.saveData(merged);
               return merged;
@@ -156,9 +157,7 @@
         };
 
         const emailCfg = data.email || {};
-        const sheetCfg = data.sheet || {};
         const canSendEmail = emailCfg.enabled && emailCfg.publicKey && emailCfg.serviceId;
-        const canSaveSheet = sheetCfg.enabled && sheetCfg.endpoint;
 
         if (canSendEmail) {
           setSending(true);
@@ -176,19 +175,6 @@
           setSendNotice('off');
         }
 
-        if (canSaveSheet) {
-          setSheetNotice('');
-          try {
-            await E.saveOrderToSheet(sheetCfg, order);
-            setSheetNotice('ok');
-          } catch (err) {
-            console.error('Lưu Google Sheet thất bại:', err);
-            setSheetNotice('error');
-          }
-        } else {
-          setSheetNotice('off');
-        }
-
         setLastOrder(order);
         setIsCheckout(false);
         setIsSuccess(true);
@@ -201,7 +187,6 @@
         setCustomer({ name: '', phone: '', email: '', address: '', note: '' });
         setLastOrder(null);
         setSendNotice('');
-        setSheetNotice('');
       };
 
       return (
@@ -255,13 +240,6 @@
                 {sendNotice === 'error' && (
                   <p className="text-sm text-amber-600 font-medium mb-5 flex items-center justify-center gap-2"><i className="fas fa-triangle-exclamation"></i> Đơn đã ghi nhận, nhưng gửi email chưa thành công. Vui lòng kiểm tra cấu hình EmailJS.</p>
                 )}
-                {sheetNotice === 'ok' && (
-                  <p className="text-sm text-green-600 font-medium mb-5 flex items-center justify-center gap-2"><i className="fas fa-table"></i> Đơn hàng đã được ghi vào Google Sheet.</p>
-                )}
-                {sheetNotice === 'error' && (
-                  <p className="text-sm text-amber-600 font-medium mb-5 flex items-center justify-center gap-2"><i className="fas fa-triangle-exclamation"></i> Đơn đã ghi nhận, nhưng không lưu được lên Google Sheet. Kiểm tra lại URL Apps Script.</p>
-                )}
-
                 <button onClick={resetAfterSuccess} className="bg-orange-600 text-white px-8 py-3 rounded-full font-bold hover:bg-orange-700 transition w-full">Tiếp tục mua sắm</button>
               </div>
             </main>

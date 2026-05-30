@@ -85,45 +85,25 @@
     return Promise.all(jobs);
   }
 
-  async function saveOrderToSheet(cfg, order) {
-    if (!cfg || !cfg.enabled) throw new Error('Chưa bật lưu lên Google Sheet.');
-    if (!cfg.endpoint) throw new Error('Chưa cấu hình endpoint Google Sheet.');
-
-    const payload = {
-      order,
-      submittedAt: new Date().toISOString(),
-    };
-
-    const response = await fetch(cfg.endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+  // Helper: POST dữ liệu lên Google Apps Script (tránh CORS bằng form data)
+  function postToSheet(url, payload) {
+    return new Promise((resolve, reject) => {
+      var formData = new FormData();
+      formData.append('payload', JSON.stringify(payload));
+      fetch(url, { method: 'POST', body: formData })
+        .then((r) => r.text())
+        .then((text) => {
+          try { resolve(JSON.parse(text)); } catch (_) { resolve(text); }
+        })
+        .catch(reject);
     });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Lưu Google Sheet thất bại: ${response.status} ${text}`);
-    }
-
-    return response.json().catch(() => null);
   }
 
-  // ---- Lưu cấu hình (cơ sở, liên hệ, v.v.) lên Google Sheet ----
+  // ---- Lưu cấu hình (cơ sở, liên hệ, email) lên Google Sheet ----
   async function saveConfigToSheet(endpoint, config) {
     if (!endpoint) throw new Error('Chưa cấu hình endpoint Google Sheet.');
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'config', config }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`Lưu config lên Sheet thất bại: ${response.status} ${text}`);
-    }
-
-    return response.json().catch(() => null);
+    return postToSheet(endpoint, { type: 'config', config });
   }
 
   // ---- Đọc cấu hình từ Google Sheet về ----
@@ -131,16 +111,16 @@
     if (!endpoint) return null;
 
     const url = endpoint + (endpoint.includes('?') ? '&' : '?') + 'action=getConfig';
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      console.warn('Không đọc được config từ Sheet:', response.status);
+    try {
+      const response = await fetch(url);
+      const text = await response.text();
+      const result = JSON.parse(text);
+      return result && result.config ? result.config : null;
+    } catch (err) {
+      console.warn('Không đọc được config từ Sheet:', err);
       return null;
     }
-
-    const result = await response.json().catch(() => null);
-    return result && result.config ? result.config : null;
   }
 
-  window.GauBaoEmail = { genOrderCode, nowString, money, sendOrderEmails, saveOrderToSheet, saveConfigToSheet, loadConfigFromSheet };
+  window.GauBaoEmail = { genOrderCode, nowString, money, sendOrderEmails, saveConfigToSheet, loadConfigFromSheet };
 })();
