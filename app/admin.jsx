@@ -67,25 +67,55 @@ function Field({ label, children, hint }) {
 
 const inputCls = 'w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 text-sm';
 
-// Ô nhập ảnh: dán đường dẫn/URL hoặc tải ảnh từ máy
+// Ô nhập ảnh: chọn giữa URL ảnh hoặc tải ảnh từ máy
 function ImageInput({ value, onChange }) {
+  const [mode, setMode] = useState(() => {
+    if (!value) return 'url';
+    if (value.startsWith('data:')) return 'file';
+    return 'url';
+  });
+
   const onPick = async (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     const url = await fileToDataUrl(f);
     onChange(url);
   };
+
   return (
-    <div className="flex gap-3 items-start">
-      <div className="w-20 h-20 rounded-xl overflow-hidden bg-stone-100 border border-gray-200 flex-shrink-0">
-        {value ? <img src={value} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.opacity = 0.2; }} /> : <div className="w-full h-full flex items-center justify-center text-stone-300"><i className="fas fa-image text-[24px]"></i></div>}
+    <div className="space-y-3">
+      {/* Nút chọn chế độ */}
+      <div className="flex gap-2">
+        <button type="button" onClick={() => setMode('url')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${mode === 'url' ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-300' : 'bg-gray-100 text-stone-500 hover:bg-gray-200'}`}>
+          <i className="fas fa-link"></i> URL ảnh
+        </button>
+        <button type="button" onClick={() => setMode('file')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${mode === 'file' ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-300' : 'bg-gray-100 text-stone-500 hover:bg-gray-200'}`}>
+          <i className="fas fa-upload"></i> Tải từ máy
+        </button>
       </div>
-      <div className="flex-1 space-y-2">
-        <input type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="tên-file.jpg hoặc https://..." className={inputCls} />
-        <label className="inline-flex items-center gap-2 text-xs font-semibold text-orange-600 cursor-pointer hover:text-orange-700">
-          <i className="fas fa-upload"></i> Tải ảnh từ máy
-          <input type="file" accept="image/*" className="hidden" onChange={onPick} />
-        </label>
+
+      <div className="flex gap-3 items-start">
+        {/* Preview */}
+        <div className="w-20 h-20 rounded-xl overflow-hidden bg-stone-100 border border-gray-200 flex-shrink-0">
+          {value ? <img src={value} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.opacity = 0.2; }} /> : <div className="w-full h-full flex items-center justify-center text-stone-300"><i className="fas fa-image text-[24px]"></i></div>}
+        </div>
+
+        <div className="flex-1 space-y-2">
+          {mode === 'url' ? (
+            <div>
+              <input type="text" value={value && !value.startsWith('data:') ? value : ''} onChange={(e) => onChange(e.target.value)} placeholder="https://i.imgur.com/abc.jpg" className={inputCls} />
+              <span className="block text-xs text-stone-400 mt-1">Dán link ảnh từ Imgur, Google Drive, Facebook...</span>
+            </div>
+          ) : (
+            <div>
+              <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-orange-300 text-sm font-semibold text-orange-600 cursor-pointer hover:bg-orange-50 transition w-full justify-center">
+                <i className="fas fa-cloud-arrow-up"></i> {value && value.startsWith('data:') ? 'Đổi ảnh khác' : 'Chọn ảnh từ máy'}
+                <input type="file" accept="image/*" className="hidden" onChange={onPick} />
+              </label>
+              <span className="block text-xs text-stone-400 mt-1">Ảnh nặng sẽ tốn dung lượng localStorage (~5MB).</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

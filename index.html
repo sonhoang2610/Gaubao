@@ -93,6 +93,9 @@
             stores: newData.stores,
             contact: newData.contact,
             email: newData.email,
+            products: newData.products,
+            hero: newData.hero,
+            banners: newData.banners,
           };
           window.GauBaoEmail.saveConfigToSheet(sheetCfg.endpoint, configToSync)
             .then(() => console.log('✓ Đã đồng bộ config lên Google Sheet.'))
@@ -102,7 +105,7 @@
         return res;
       };
 
-      // Khi mở trang: thử đọc config (cơ sở, liên hệ) từ Google Sheet
+      // Khi mở trang: thử đọc toàn bộ config từ Google Sheet
       useEffect(() => {
         const sheetCfg = data.sheet || {};
         if (!sheetCfg.enabled || !sheetCfg.endpoint) return;
@@ -115,6 +118,9 @@
                 stores: Array.isArray(remote.stores) && remote.stores.length ? remote.stores : prev.stores,
                 contact: remote.contact && remote.contact.phone ? { ...prev.contact, ...remote.contact } : prev.contact,
                 email: remote.email ? { ...prev.email, ...remote.email } : prev.email,
+                products: Array.isArray(remote.products) && remote.products.length ? remote.products : prev.products,
+                hero: remote.hero ? { ...prev.hero, ...remote.hero } : prev.hero,
+                banners: Array.isArray(remote.banners) && remote.banners.length ? remote.banners : prev.banners,
               };
               S.saveData(merged);
               return merged;
