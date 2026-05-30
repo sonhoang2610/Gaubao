@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAUBAO - Bánh Bao Cao Cấp</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #c2410c; }
+    ::selection { background-color: #fed7aa; color: #7c2d12; }
+  </style>
+</head>
+<body class="bg-[#FFFBF5]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- CẤU HÌNH MẶC ĐỊNH ---
+    const FALLBACK_CONFIG = {
+      heroMedia: [
+        './z7688754995290_53834443e62474e4ba14b38b777a25d4.jpg', 
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?auto=format&fit=crop&w=800&q=80'
+      ],
+      storeLocations: [
+        { id: 1, name: 'Cơ sở 1: Hoàng Văn Thái', address: '293 Hoàng Văn Thái, Hà Nội', mapLink: '#' }
+      ],
+      contactLinks: {
+        phone: '0981234567', zalo: 'https://zalo.me/0981234567', facebook: 'https://m.me/gaubao.vn', map: '#'
+      }
+    };
+
+    // --- COMPONENTS ---
+    const FlyingImage = ({ anim }) => {
+      const [active, setActive] = useState(false);
+      useEffect(() => {
+        const timer = setTimeout(() => setActive(true), 10);
+        return () => clearTimeout(timer);
+      }, []);
+
+      const targetX = window.innerWidth > 768 ? window.innerWidth - 120 : window.innerWidth - 60;
+      const targetY = 25;
+
+      return (
+        <img src={anim.img} alt="flying" className="fixed z-[100] rounded-full object-cover shadow-2xl pointer-events-none"
+          style={{
+            width: '60px', height: '60px',
+            left: active ? targetX : anim.startX, top: active ? targetY : anim.startY,
+            opacity: active ? 0 : 1, transform: active ? 'scale(0.1)' : 'scale(1)',
+            transition: 'all 0.8s cubic-bezier(0.25, 1, 0.5, 1)' 
+          }}
+        />
+      );
+    };
+
+    const ProductCard = ({ product, onAddToCart }) => {
+      return (
+        <div className="bg-white rounded-[2rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] transition-all duration-300 border border-orange-50 group flex flex-col h-full relative">
+          <div className="relative h-56 md:h-64 rounded-[1.5rem] overflow-hidden mb-5 bg-stone-100">
+            <img 
+              src={product.img} alt={product.name} 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" 
+              onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?auto=format&fit=crop&w=800&q=80'; }} 
+            />
+            {product.tags && product.tags.length > 0 && (
+              <div className="absolute top-3 left-3 bg-orange-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md tracking-wide z-10">
+                {product.tags[0]}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-stone-900/95 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-center p-5 translate-y-2 group-hover:translate-y-0 z-20 backdrop-blur-sm cursor-default overflow-y-auto">
+              <h4 className="text-orange-400 font-bold mb-3 flex items-center gap-2 flex-shrink-0">
+                <i className="fas fa-info-circle text-[18px]"></i> Thông tin chi tiết
+              </h4>
+              <p className="text-sm text-gray-200 mb-4 leading-relaxed"><span className="font-semibold text-white">Thành phần: </span> {product.ingredients || 'Đang cập nhật...'}</p>
+              {product.note && (
+                <div className="mt-auto pt-3 border-t border-gray-600">
+                  <p className="text-xs text-orange-200 font-medium italic"><i className="fas fa-star mr-1"></i> {product.note}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex flex-col flex-grow px-2">
+            <h3 className="text-xl font-bold text-stone-800 mb-2 leading-tight group-hover:text-orange-600 transition-colors cursor-pointer">{product.name}</h3>
+            <p className="text-stone-500 text-xs mb-6 flex items-start gap-1.5 font-medium line-clamp-2">
+              <i className="fas fa-leaf text-[12px] text-orange-500 mt-0.5"></i>{product.note ? product.note : 'Hoàn toàn không dùng chất bảo quản'}
+            </p>
+            <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+              <span className="text-2xl font-black text-orange-600">{product.price.toLocaleString('vi-VN')}đ</span>
+              <button onClick={(e) => onAddToCart(product, e)} className="bg-orange-50 hover:bg-orange-600 text-orange-600 hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 relative z-30">
+                <i className="fas fa-shopping-cart text-[20px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    function GauBaoApp() {
+      const [appConfig, setAppConfig] = useState(FALLBACK_CONFIG);
+      const [products, setProducts] = useState([]); 
+      const [isLoadingCSV, setIsLoadingCSV] = useState(true);
+      
+      const [cartItems, setCartItems] = useState([]);
+      const [isCartOpen, setIsCartOpen] = useState(false);
+      const [isCheckout, setIsCheckout] = useState(false);
+      const [isSuccess, setIsSuccess] = useState(false);
+      const [animations, setAnimations] = useState([]);
+      const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
+
+      // --- 1. ĐỌC FILE CONFIG.CSV ---
+      useEffect(() => {
+        const processConfigData = (results) => {
+          try {
+            const newConfig = { heroMedia: [], storeLocations: [], contactLinks: {...FALLBACK_CONFIG.contactLinks} };
+            let storeId = 1;
+
+            results.data.forEach(row => {
+              const type = (row['Loại'] || row['type'] || '').trim().toUpperCase();
+              const val1 = (row['Giá trị 1'] || row['val1'] || '').trim();
+              const val2 = (row['Giá trị 2'] || row['val2'] || '').trim();
+              const val3 = (row['Giá trị 3'] || row['val3'] || '').trim();
+
+              if (!type) return;
+
+              if (type === 'BANNER' && val1) {
+                let bannerUrl = val1;
+                if (!bannerUrl.startsWith('http') && !bannerUrl.startsWith('./') && !bannerUrl.startsWith('/')) {
+                  bannerUrl = './' + bannerUrl;
+                }
+                newConfig.heroMedia.push(bannerUrl);
+              }
+              else if (type === 'PHONE' && val1) newConfig.contactLinks.phone = val1;
+              else if (type === 'ZALO' && val1) newConfig.contactLinks.zalo = val1;
+              else if (type === 'FACEBOOK' && val1) newConfig.contactLinks.facebook = val1;
+              else if (type === 'MAP' && val1) newConfig.contactLinks.map = val1;
+              else if (type === 'STORE' && val1) {
+                newConfig.storeLocations.push({ id: storeId++, name: val1, address: val2, mapLink: val3 || '#' });
+              }
+            });
+
+            if (newConfig.heroMedia.length === 0) newConfig.heroMedia = FALLBACK_CONFIG.heroMedia;
+            if (newConfig.storeLocations.length === 0) newConfig.storeLocations = FALLBACK_CONFIG.storeLocations;
+            setAppConfig(newConfig);
+          } catch (e) { console.error("Lỗi parse config.csv", e); }
+        };
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'config.csv', true);
+        xhr.onload = function() {
+          if (xhr.status === 200 || xhr.status === 0) {
+            Papa.parse(xhr.responseText, { header: true, skipEmptyLines: true, complete: processConfigData });
+          }
+        };
+        try { xhr.send(); } catch (e) { }
+      }, []);
+
+      // --- 2. ĐỌC FILE PRODUCT.CSV ---
+      useEffect(() => {
+        const FALLBACK_PRODUCTS = [
+          { id: '1', name: 'Bánh bao xá xíu Thượng Hải (Demo)', price: 24000, ingredients: 'Bột mì trắng, đường, nấm men...', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80', note: 'Không chất bảo quản', tags: ['Best Seller'] },
+          { id: '2', name: 'Bánh bao bò phomai nguyên cám (Demo)', price: 29000, ingredients: 'Thịt bò 80%, lợn 20%, sốt cà chua...', img: 'https://images.unsplash.com/photo-1555507036-ab1f40ce887f?auto=format&fit=crop&w=800&q=80', note: 'Không chất bảo quản', tags: ['Đặc biệt'] },
+          { id: '3', name: 'Bánh bao chay vỏ cốm tươi (Demo)', price: 15000, ingredients: 'Bột mì trắng, cốm tươi, đường kính...', img: 'https://images.unsplash.com/photo-1614088923419-f53ab02611a2?auto=format&fit=crop&w=800&q=80', note: 'Chay thanh đạm', tags: ['Chay'] }
+        ];
+
+        const processData = (results) => {
+            const isInvalidCSV = !results.meta || !results.meta.fields || !results.meta.fields.includes('tên');
+            if (isInvalidCSV) { setProducts(FALLBACK_PRODUCTS); setIsLoadingCSV(false); return; }
+
+            const parsedData = results.data.map(item => {
+              let rawPrice = item['giá'] || '0';
+              let numericPrice = parseInt(rawPrice.replace(/\./g, '').replace('đ', '').trim(), 10) || 0;
+              let rawImage = item['image'] ? item['image'].trim() : '';
+              let imageUrl = 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?auto=format&fit=crop&w=800&q=80';
+              
+              if (rawImage !== '') {
+                if (rawImage.startsWith('http') || rawImage.startsWith('./') || rawImage.startsWith('/')) { imageUrl = rawImage; } 
+                else { imageUrl = './' + rawImage; }
+              }
+
+              return {
+                id: item['id'] || Math.random().toString(), name: item['tên'] || 'Bánh bao mới', price: numericPrice,
+                ingredients: item['desc thành phần'] || '', img: imageUrl, note: item['note'] || '', tags: []
+              };
+            });
+            setProducts(parsedData); setIsLoadingCSV(false);
+        };
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'product.csv', true);
+        xhr.onload = function() {
+            if (xhr.status === 200 || xhr.status === 0) {
+                Papa.parse(xhr.responseText, { header: true, skipEmptyLines: true, complete: processData });
+            } else { setProducts(FALLBACK_PRODUCTS); setIsLoadingCSV(false); }
+        };
+        xhr.onerror = function() { setProducts(FALLBACK_PRODUCTS); setIsLoadingCSV(false); };
+        try { xhr.send(); } catch (e) { setProducts(FALLBACK_PRODUCTS); setIsLoadingCSV(false); }
+      }, []);
+
+      // --- 3. SLIDER ẢNH & GIỎ HÀNG ---
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setCurrentHeroIdx((prev) => (prev + 1) % appConfig.heroMedia.length);
+        }, 3000);
+        return () => clearInterval(interval); 
+      }, [appConfig.heroMedia.length]);
+
+      const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+      const totalCartPrice = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+
+      const handleAddToCart = (product, event) => {
+        setCartItems(prev => {
+          const existing = prev.find(item => item.id === product.id);
+          if (existing) return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+          return [...prev, { ...product, quantity: 1 }];
+        });
+        const rect = event.currentTarget.getBoundingClientRect();
+        const animId = Date.now(); 
+        setAnimations(prev => [...prev, { id: animId, startX: rect.left, startY: rect.top, img: product.img }]);
+        setTimeout(() => setAnimations(prev => prev.filter(a => a.id !== animId)), 800);
+      };
+
+      const updateQuantity = (id, delta) => setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item));
+      const removeItem = (id) => setCartItems(prev => prev.filter(item => item.id !== id));
+      const handleCheckoutSubmit = (e) => { e.preventDefault(); setIsCheckout(false); setIsSuccess(true); setCartItems([]); setTimeout(() => setIsSuccess(false), 4000); };
+
+      return (
+        <div className="min-h-screen bg-[#FFFBF5] font-sans text-stone-800 selection:bg-orange-200 selection:text-orange-900 relative">
+          
+          {/* NÚT HUD LIÊN HỆ */}
+          <div className="fixed bottom-6 right-4 md:right-8 z-50 flex flex-col gap-3 items-center">
+            <a href={appConfig.contactLinks.map} target="_blank" rel="noreferrer" className="w-11 h-11 bg-green-500 text-white rounded-full flex items-center justify-center shadow-[0_4px_15px_rgba(34,197,94,0.4)] hover:scale-110 hover:-translate-y-1 transition-all cursor-pointer">
+              <i className="fas fa-map-marker-alt text-[20px]"></i>
+            </a>
+            <a href={appConfig.contactLinks.zalo} target="_blank" rel="noreferrer" className="w-11 h-11 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-[0_4px_15px_rgba(59,130,246,0.4)] hover:scale-110 hover:-translate-y-1 transition-all cursor-pointer font-black text-[11px] tracking-wider">
+              Zalo
+            </a>
+            <a href={appConfig.contactLinks.facebook} target="_blank" rel="noreferrer" className="w-11 h-11 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:scale-110 hover:-translate-y-1 transition-all cursor-pointer">
+              <i className="fab fa-facebook-messenger text-[22px] fill-current"></i>
+            </a>
+            <a href={`tel:${appConfig.contactLinks.phone}`} className="w-14 h-14 mt-1 bg-red-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(220,38,38,0.6)] hover:scale-110 transition-all cursor-pointer animate-bounce relative">
+              <i className="fas fa-phone-alt text-[26px] animate-pulse"></i>
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+              </span>
+            </a>
+          </div>
+
+          {animations.map(anim => <FlyingImage key={anim.id} anim={anim} />)}
+
+          {/* HEADER */}
+          <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md shadow-sm z-40 transition-all">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-20">
+                <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => { setIsCheckout(false); setIsSuccess(false); window.scrollTo(0, 0); }}>
+                  <span className="text-3xl font-black tracking-tighter text-orange-600">GAU<span className="text-stone-800">BAO.</span></span>
+                </div>
+                {!isCheckout && !isSuccess && (
+                  <nav className="hidden md:flex space-x-8">
+                    <a href="#" className="text-stone-800 hover:text-orange-600 font-semibold transition" onClick={(e) => {e.preventDefault(); window.scrollTo(0,0);}}>Trang chủ</a>
+                    <a href="#menu" className="text-stone-800 hover:text-orange-600 font-semibold transition">Thực đơn</a>
+                  </nav>
+                )}
+                <div className="flex items-center space-x-5">
+                  <div className="hidden md:flex items-center text-stone-600">
+                    <i className="fas fa-phone-alt text-[18px] mr-2 text-orange-600"></i>
+                    <span className="font-bold text-sm">{appConfig.contactLinks.phone}</span>
+                  </div>
+                  <button className="relative p-2 text-stone-800 hover:text-orange-600 transition" onClick={() => setIsCartOpen(true)}>
+                    <i className="fas fa-shopping-cart text-[24px]"></i>
+                    {totalCartItems > 0 && (
+                      <span className="absolute top-0 right-0 bg-orange-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-pulse">{totalCartItems}</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* SIDEBAR GIỎ HÀNG */}
+          {isCartOpen && (
+            <>
+              <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 transition-opacity" onClick={() => setIsCartOpen(false)} />
+              <div className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300 translate-x-0">
+                <div className="p-5 flex items-center justify-between border-b border-gray-100">
+                  <h2 className="text-xl font-bold flex items-center gap-2"><i className="fas fa-shopping-cart text-[20px] text-orange-600"></i> Giỏ hàng của bạn</h2>
+                  <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition text-gray-500"><i className="fas fa-times text-[20px]"></i></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                  {cartItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-3"><i className="fas fa-shopping-cart text-[48px] opacity-20"></i><p>Giỏ hàng đang trống</p></div>
+                  ) : (
+                    cartItems.map(item => (
+                      <div key={item.id} className="flex gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm relative group">
+                        <img src={item.img} alt={item.name} className="w-20 h-20 rounded-xl object-cover" onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?auto=format&fit=crop&w=800&q=80'; }} />
+                        <div className="flex-1 flex flex-col justify-between">
+                          <h4 className="font-semibold text-sm text-stone-800 pr-6 leading-tight">{item.name}</h4>
+                          <p className="font-bold text-orange-600 text-sm">{item.price.toLocaleString('vi-VN')}đ</p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+                              <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:text-orange-600"><i className="fas fa-minus text-[14px]"></i></button>
+                              <span className="w-6 text-center text-sm font-semibold">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:text-orange-600"><i className="fas fa-plus text-[14px]"></i></button>
+                            </div>
+                          </div>
+                        </div>
+                        <button onClick={() => removeItem(item.id)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition"><i className="fas fa-trash text-[16px]"></i></button>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {cartItems.length > 0 && (
+                  <div className="p-5 border-t border-gray-100 bg-gray-50">
+                    <div className="flex justify-between items-center mb-4"><span className="text-gray-500 font-medium">Tổng cộng:</span><span className="text-2xl font-black text-orange-600">{totalCartPrice.toLocaleString('vi-VN')}đ</span></div>
+                    <button onClick={() => { setIsCartOpen(false); setIsCheckout(true); window.scrollTo(0, 0); }} className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition shadow-lg shadow-orange-600/30 flex items-center justify-center gap-2">Tiến Hành Đặt Hàng <i className="fas fa-chevron-right text-[18px]"></i></button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* MÀN HÌNH ĐẶT HÀNG THÀNH CÔNG */}
+          {isSuccess ? (
+            <main className="pt-32 pb-20 px-4 min-h-screen flex items-center justify-center">
+              <div className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-xl border border-orange-100">
+                <i className="fas fa-check-circle text-[80px] text-green-500 mx-auto mb-6 animate-bounce"></i>
+                <h2 className="text-3xl font-black text-stone-800 mb-2">Đặt Hàng Thành Công!</h2>
+                <p className="text-stone-500 mb-8">Cảm ơn bạn đã lựa chọn GAUBAO. Chúng tôi sẽ gọi lại ngay để xác nhận đơn hàng!</p>
+                <button onClick={() => setIsSuccess(false)} className="bg-orange-600 text-white px-8 py-3 rounded-full font-bold hover:bg-orange-700 transition w-full">Tiếp tục mua sắm</button>
+              </div>
+            </main>
+          ) : 
+
+          /* MÀN HÌNH THANH TOÁN (CHECKOUT) */
+          isCheckout ? (
+            <main className="pt-28 pb-20 px-4 max-w-7xl mx-auto min-h-screen">
+              <button onClick={() => setIsCheckout(false)} className="flex items-center text-gray-500 hover:text-orange-600 font-medium mb-6 transition"><i className="fas fa-arrow-left text-[18px] mr-2"></i> Quay lại chọn món</button>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-7 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                  <h2 className="text-2xl font-black mb-6 flex items-center gap-2"><i className="fas fa-map-marker-alt text-[20px] text-orange-600"></i> Thông tin giao hàng</h2>
+                  <form onSubmit={handleCheckoutSubmit} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div><label className="block text-sm font-semibold text-stone-700 mb-2">Họ và Tên *</label><input required type="text" placeholder="VD: Nguyễn Văn A" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50" /></div>
+                      <div><label className="block text-sm font-semibold text-stone-700 mb-2">Số điện thoại *</label><input required type="tel" placeholder="098 123 4567" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50" /></div>
+                    </div>
+                    <div><label className="block text-sm font-semibold text-stone-700 mb-2">Địa chỉ nhận hàng *</label><input required type="text" placeholder="Số nhà, Tên đường, Quận/Huyện..." className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50" /></div>
+                    <div><label className="block text-sm font-semibold text-stone-700 mb-2">Ghi chú cho quán (Tùy chọn)</label><textarea rows="3" placeholder="Ví dụ: Xin thêm tương ớt..." className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 resize-none"></textarea></div>
+                    <button type="submit" className="w-full bg-stone-900 text-white font-bold text-lg py-4 rounded-xl hover:bg-black transition shadow-lg mt-4 hidden lg:block">Xác Nhận Đơn Hàng</button>
+                  </form>
+                </div>
+                <div className="lg:col-span-5 bg-orange-50 p-8 rounded-3xl border border-orange-100 h-fit sticky top-28">
+                  <h2 className="text-xl font-bold mb-6">Đơn hàng của bạn ({totalCartItems} món)</h2>
+                  <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2">
+                    {cartItems.map(item => (
+                      <div key={item.id} className="flex justify-between items-center text-sm font-medium">
+                        <div className="flex items-center gap-3 flex-1"><span className="w-6 h-6 rounded-full bg-orange-200 text-orange-800 flex items-center justify-center text-xs">{item.quantity}</span><span className="text-stone-700 pr-2 line-clamp-1">{item.name}</span></div>
+                        <span className="text-stone-900">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-orange-200 pt-4 space-y-3 mb-6">
+                    <div className="flex justify-between text-stone-500 text-sm"><span>Tạm tính</span><span>{totalCartPrice.toLocaleString('vi-VN')}đ</span></div>
+                    <div className="flex justify-between font-black text-xl pt-2 border-t border-orange-200 mt-2"><span>Tổng cộng</span><span className="text-orange-600">{totalCartPrice.toLocaleString('vi-VN')}đ</span></div>
+                  </div>
+                  <button onClick={(e) => { const form = document.querySelector('form'); if (form.checkValidity()) handleCheckoutSubmit(e); else form.reportValidity(); }} className="w-full bg-stone-900 text-white font-bold text-lg py-4 rounded-xl hover:bg-black transition shadow-lg lg:hidden">Xác Nhận Đơn Hàng</button>
+                </div>
+              </div>
+            </main>
+          ) : 
+
+          /* MÀN HÌNH TRANG CHỦ MẶC ĐỊNH */
+          (
+            <>
+              <section className="pt-28 pb-16 px-4 md:pt-40 md:pb-24 overflow-hidden">
+                <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center gap-12 lg:gap-20">
+                  <div className="flex-1 text-center md:text-left z-10">
+                    <div className="inline-flex items-center space-x-2 bg-orange-100/80 text-orange-700 px-4 py-2 rounded-full text-sm font-bold mb-6">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span><span>Bánh Bao Cao Cấp Từ 2020</span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-stone-900 mb-6 leading-[1.15]">Bánh Bao<br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500">Cao Cấp</span></h1>
+                    <p className="text-stone-600 text-lg md:text-xl mb-10 max-w-xl mx-auto md:mx-0 leading-relaxed">Hoàn toàn không chất bảo quản. GAUBAO tự hào mang đến những chiếc bánh bao nóng hổi, nguyên cám tốt cho sức khỏe với lớp nhân thượng hạng.</p>
+                    <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
+                      <a href="#menu" className="bg-orange-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-700 transition shadow-[0_10px_20px_rgba(234,88,12,0.3)] hover:-translate-y-1 flex items-center justify-center">Đặt Hàng Ngay <i className="fas fa-chevron-right text-[20px] ml-1"></i></a>
+                    </div>
+                  </div>
+                  <div className="flex-1 relative w-full max-w-lg mx-auto">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-amber-200/50 rounded-full blur-3xl -z-10"></div>
+                    <div className="relative rounded-full p-2 bg-white/50 backdrop-blur-sm border border-white/50 shadow-2xl">
+                      <div className="relative w-full aspect-square rounded-full overflow-hidden shadow-inner bg-stone-100">
+                        {appConfig.heroMedia.map((src, idx) => {
+                          const isVideo = src.endsWith('.mp4');
+                          return isVideo ? (
+                            <video key={idx} src={src} autoPlay loop muted playsInline className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentHeroIdx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} />
+                          ) : (
+                            <img key={idx} src={src} alt="Bánh Bao" className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentHeroIdx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`} />
+                          );
+                        })}
+                      </div>
+                      <div className="absolute -bottom-4 -left-8 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-orange-50 animate-bounce z-20" style={{ animationDuration: '3s' }}>
+                        <div className="bg-orange-100 p-2 rounded-full text-orange-600"><i className="fas fa-leaf text-[24px]"></i></div>
+                        <div><p className="text-xs text-stone-500 font-medium">Nguyên liệu</p><p className="font-bold text-stone-800">100% Tự nhiên</p></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section id="menu" className="py-20 px-4 max-w-7xl mx-auto min-h-[500px]">
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl md:text-5xl font-black text-stone-900 mb-4">Thực Đơn <span className="text-orange-600">Hôm Nay</span></h2>
+                  <p className="text-stone-500 max-w-2xl mx-auto text-lg">Khám phá những chiếc bánh bao thủ công được làm bằng tình yêu và sự tỉ mỉ.</p>
+                </div>
+                {isLoadingCSV ? (
+                  <div className="flex flex-col items-center justify-center py-20"><i className="fas fa-spinner fa-spin text-4xl text-orange-500 mb-4"></i><p className="text-stone-500 font-medium">Đang tải danh sách sản phẩm...</p></div>
+                ) : products.length === 0 ? (
+                   <div className="text-center text-stone-500 font-medium py-10 border-2 border-dashed border-gray-200 rounded-2xl">Không tìm thấy sản phẩm nào. Vui lòng kiểm tra lại file product.csv!</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {products.map(product => <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />)}
+                  </div>
+                )}
+              </section>
+
+              <footer className="bg-stone-900 text-stone-300 py-16 border-t-8 border-orange-600 mt-12">
+                <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                  <div>
+                    <div className="text-3xl font-black tracking-tighter text-white mb-6">GAU<span className="text-orange-500">BAO.</span></div>
+                    <p className="text-stone-400 leading-relaxed">Hương vị bánh bao cao cấp, chuẩn vị Thượng Hải. Chăm chút từ lớp vỏ mềm xốp đến nhân bánh đậm đà.</p>
+                  </div>
+                  <div className="lg:col-span-2">
+                    <h4 className="text-white font-bold text-lg mb-6">Hệ Thống Cửa Hàng</h4>
+                    <div className="space-y-6">
+                      {appConfig.storeLocations.map(store => (
+                        <div key={store.id} className="flex items-start space-x-3 group">
+                          <i className="fas fa-map-marker-alt text-[20px] text-orange-500 flex-shrink-0 mt-1 group-hover:animate-bounce"></i>
+                          <div>
+                            <p className="font-bold text-white group-hover:text-orange-400 transition cursor-pointer"><a href={store.mapLink} target="_blank" rel="noreferrer">{store.name}</a></p>
+                            <p className="text-stone-400 mt-1">{store.address}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </footer>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<GauBaoApp />);
+  </script>
+</body>
+</html>
