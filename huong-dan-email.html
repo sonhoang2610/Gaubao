@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn gửi email đơn hàng — GAUBAO</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #fffbf5; color: #292524; line-height: 1.6; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .logo { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .logo span { color: #ea580c; }
+  h1 { font-size: 30px; font-weight: 800; margin: 18px 0 6px; color: #1c1917; }
+  .lead { color: #78716c; font-size: 17px; margin: 0 0 36px; }
+  .step { background: #fff; border: 1px solid #f1ece4; border-radius: 18px; padding: 24px 26px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+  .step h2 { font-size: 19px; margin: 0 0 10px; color: #1c1917; display: flex; align-items: center; gap: 12px; }
+  .num { flex-shrink: 0; width: 32px; height: 32px; background: #ea580c; color: #fff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; }
+  .step p { margin: 8px 0; color: #57534e; font-size: 15px; }
+  .step a { color: #ea580c; font-weight: 600; }
+  ul { margin: 10px 0; padding-left: 22px; color: #57534e; }
+  li { margin: 5px 0; }
+  code.inline { background: #faf0e6; color: #c2410c; padding: 2px 7px; border-radius: 6px; font-size: 13px; font-weight: 600; font-family: "SF Mono", Menlo, monospace; }
+  .codeblock { position: relative; margin: 14px 0 2px; }
+  .codeblock textarea { width: 100%; height: 280px; background: #1c1917; color: #e7e5e4; border: none; border-radius: 12px; padding: 16px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; resize: vertical; }
+  .copybtn { position: absolute; top: 10px; right: 10px; background: #ea580c; color: #fff; border: none; border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .2s; }
+  .copybtn:hover { background: #c2410c; }
+  .label { font-size: 13px; font-weight: 700; color: #78716c; text-transform: uppercase; letter-spacing: .5px; margin: 18px 0 0; }
+  .vars { background: #faf6f0; border: 1px solid #f1ece4; border-radius: 12px; padding: 14px 18px; font-size: 13px; }
+  .vars code { background: #fff; border: 1px solid #ece5db; color: #c2410c; padding: 2px 7px; border-radius: 6px; font-family: monospace; display: inline-block; margin: 3px 4px 3px 0; }
+  .note { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 14px 18px; color: #9a3412; font-size: 14px; display: flex; gap: 10px; }
+  .back { display: inline-flex; align-items: center; gap: 8px; color: #78716c; text-decoration: none; font-weight: 600; font-size: 14px; margin-bottom: 24px; }
+  .back:hover { color: #ea580c; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back"><i class="fas fa-arrow-left"></i> Về trang chủ GAUBAO</a>
+  <div class="top"><span class="logo">GAU<span>BAO.</span></span></div>
+  <h1>Hướng dẫn gửi email đơn hàng</h1>
+  <p class="lead">Làm theo 6 bước dưới đây (khoảng 10 phút) để mỗi đơn hàng tự động gửi email cho admin và cho khách. Hoàn toàn miễn phí với EmailJS.</p>
+
+  <div class="step">
+    <h2><span class="num">1</span> Tạo tài khoản EmailJS</h2>
+    <p>Vào <a href="https://www.emailjs.com/" target="_blank">emailjs.com</a> → <b>Sign Up</b> bằng Gmail. Gói miễn phí gửi được 200 email/tháng.</p>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">2</span> Kết nối email gửi đi (Email Service)</h2>
+    <p>Trong bảng điều khiển → <b>Email Services</b> → <b>Add New Service</b> → chọn <b>Gmail</b> (hoặc nhà cung cấp của bạn) → kết nối tài khoản.</p>
+    <p>Sau khi xong, copy <b>Service ID</b> (dạng <code class="inline">service_xxxxxx</code>) — sẽ dán vào trang quản trị.</p>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">3</span> Lấy Public Key</h2>
+    <p>Vào <b>Account</b> → <b>General</b> → copy <b>Public Key</b> (dạng <code class="inline">aBcD1234...</code>).</p>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">4</span> Tạo mẫu email cho ADMIN</h2>
+    <p>Vào <b>Email Templates</b> → <b>Create New Template</b>. Ở phần cài đặt template, đặt:</p>
+    <ul>
+      <li><b>To Email</b>: <code class="inline">{{to_email}}</code></li>
+      <li><b>Subject</b>: <code class="inline">🥟 Đơn mới #{{order_code}} - {{customer_name}}</code></li>
+    </ul>
+    <p>Bấm nút <b>&lt;/&gt; (Code)</b> ở góc khung soạn nội dung, xoá hết và dán đoạn HTML sau vào:</p>
+    <div class="codeblock">
+      <button class="copybtn" onclick="copyTa(this)"><i class="fas fa-copy"></i> Copy</button>
+      <textarea readonly id="tplAdmin"></textarea>
+    </div>
+    <p>Lưu lại và copy <b>Template ID</b> (dạng <code class="inline">template_xxxxxx</code>).</p>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">5</span> Tạo mẫu email cho KHÁCH</h2>
+    <p>Tạo thêm 1 template nữa. Cài đặt:</p>
+    <ul>
+      <li><b>To Email</b>: <code class="inline">{{to_email}}</code></li>
+      <li><b>Subject</b>: <code class="inline">GAUBAO - Xác nhận đơn hàng #{{order_code}}</code></li>
+    </ul>
+    <p>Dán HTML sau vào phần Code:</p>
+    <div class="codeblock">
+      <button class="copybtn" onclick="copyTa(this)"><i class="fas fa-copy"></i> Copy</button>
+      <textarea readonly id="tplCustomer"></textarea>
+    </div>
+    <p>Lưu lại và copy <b>Template ID</b>.</p>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">6</span> Điền vào trang quản trị GAUBAO</h2>
+    <p>Mở trang chủ → bấm logo <b>GAUBAO.</b> 5 lần → nhập mật khẩu → tab <b>Đơn hàng / Email</b>. Bật công tắc và điền:</p>
+    <ul>
+      <li>Email admin nhận đơn</li>
+      <li>Public Key, Service ID</li>
+      <li>Template ID (admin) &amp; Template ID (khách)</li>
+    </ul>
+    <p>Bấm <b>Lưu thay đổi</b>. Xong! Thử đặt 1 đơn để kiểm tra.</p>
+  </div>
+
+  <p class="label">Các biến template dùng được</p>
+  <div class="vars">
+    <code>{{order_code}}</code><code>{{order_time}}</code><code>{{customer_name}}</code><code>{{customer_phone}}</code><code>{{customer_email}}</code><code>{{customer_address}}</code><code>{{customer_note}}</code><code>{{items_block}}</code><code>{{total}}</code><code>{{shop_name}}</code><code>{{shop_phone}}</code><code>{{to_email}}</code><code>{{email_title}}</code>
+  </div>
+
+  <p class="label" style="margin-top:24px;">Lưu ý</p>
+  <div class="note">
+    <i class="fas fa-lightbulb" style="margin-top:3px;"></i>
+    <span><code class="inline">{{items_block}}</code> là bảng các món dạng HTML do website tự dựng — phải đặt nó <b>bên trong</b> &lt;tbody&gt; của bảng như trong mẫu, đừng để trong dấu nháy.</span>
+  </div>
+</div>
+
+<!-- Nội dung 2 template được nạp an toàn qua JS để không bị trình duyệt diễn giải -->
+<script>
+const TPL_ADMIN = String.raw`<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;background:#fffbf5;border-radius:16px;overflow:hidden;border:1px solid #f1ece4;">
+  <div style="background:#1c1917;padding:24px 28px;">
+    <span style="font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-1px;">GAU<span style="color:#f97316;">BAO.</span></span>
+    <span style="float:right;background:#ea580c;color:#ffffff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;">{{email_title}}</span>
+  </div>
+  <div style="padding:28px;">
+    <h1 style="margin:0 0 4px;font-size:20px;color:#1c1917;">Đơn hàng mới #{{order_code}}</h1>
+    <p style="margin:0 0 20px;color:#78716c;font-size:13px;">Thời gian đặt: {{order_time}}</p>
+    <div style="background:#ffffff;border:1px solid #f1ece4;border-radius:12px;padding:16px 18px;margin-bottom:18px;">
+      <p style="margin:0 0 10px;font-weight:700;color:#ea580c;font-size:13px;text-transform:uppercase;">Thông tin khách</p>
+      <p style="margin:4px 0;color:#292524;font-size:14px;"><b>Tên:</b> {{customer_name}}</p>
+      <p style="margin:4px 0;color:#292524;font-size:14px;"><b>SĐT:</b> {{customer_phone}}</p>
+      <p style="margin:4px 0;color:#292524;font-size:14px;"><b>Email:</b> {{customer_email}}</p>
+      <p style="margin:4px 0;color:#292524;font-size:14px;"><b>Địa chỉ:</b> {{customer_address}}</p>
+      <p style="margin:4px 0;color:#292524;font-size:14px;"><b>Ghi chú:</b> {{customer_note}}</p>
+    </div>
+    <table width="100%" style="border-collapse:collapse;background:#ffffff;border:1px solid #f1ece4;border-radius:12px;overflow:hidden;">
+      <thead><tr style="background:#faf6f0;">
+        <th align="left" style="padding:10px 14px;font-size:12px;color:#78716c;text-transform:uppercase;">Món</th>
+        <th align="center" style="padding:10px 14px;font-size:12px;color:#78716c;text-transform:uppercase;">SL</th>
+        <th align="right" style="padding:10px 14px;font-size:12px;color:#78716c;text-transform:uppercase;">Thành tiền</th>
+      </tr></thead>
+      <tbody>{{items_block}}</tbody>
+    </table>
+    <div style="text-align:right;margin-top:16px;">
+      <span style="color:#78716c;font-size:14px;">Tổng cộng: </span>
+      <span style="font-size:22px;font-weight:800;color:#ea580c;">{{total}}</span>
+    </div>
+  </div>
+  <div style="background:#faf6f0;padding:16px 28px;text-align:center;color:#a8a29e;font-size:12px;">GAUBAO · Hotline {{shop_phone}}</div>
+</div>`;
+
+const TPL_CUSTOMER = String.raw`<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;background:#fffbf5;border-radius:16px;overflow:hidden;border:1px solid #f1ece4;">
+  <div style="background:#1c1917;padding:24px 28px;text-align:center;">
+    <span style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-1px;">GAU<span style="color:#f97316;">BAO.</span></span>
+  </div>
+  <div style="padding:32px 28px;text-align:center;">
+    <div style="width:64px;height:64px;line-height:64px;margin:0 auto 16px;background:#dcfce7;color:#16a34a;border-radius:50%;font-size:30px;font-weight:800;">&#10003;</div>
+    <h1 style="margin:0 0 6px;font-size:22px;color:#1c1917;">Cảm ơn bạn đã đặt hàng!</h1>
+    <p style="margin:0 0 4px;color:#78716c;font-size:14px;">Đơn hàng <b style="color:#ea580c;">#{{order_code}}</b> của bạn đã được tiếp nhận.</p>
+    <p style="margin:0 0 24px;color:#a8a29e;font-size:13px;">{{order_time}} · GAUBAO sẽ gọi lại để xác nhận sớm nhất.</p>
+    <table width="100%" style="border-collapse:collapse;background:#ffffff;border:1px solid #f1ece4;border-radius:12px;overflow:hidden;text-align:left;">
+      <thead><tr style="background:#faf6f0;">
+        <th align="left" style="padding:10px 14px;font-size:12px;color:#78716c;">Món</th>
+        <th align="center" style="padding:10px 14px;font-size:12px;color:#78716c;">SL</th>
+        <th align="right" style="padding:10px 14px;font-size:12px;color:#78716c;">Thành tiền</th>
+      </tr></thead>
+      <tbody>{{items_block}}</tbody>
+    </table>
+    <div style="text-align:right;margin-top:16px;">
+      <span style="color:#78716c;font-size:14px;">Tổng cộng: </span>
+      <span style="font-size:22px;font-weight:800;color:#ea580c;">{{total}}</span>
+    </div>
+    <div style="background:#ffffff;border:1px solid #f1ece4;border-radius:12px;padding:14px 18px;margin-top:18px;text-align:left;">
+      <p style="margin:0 0 6px;font-weight:700;color:#1c1917;font-size:13px;">Giao tới</p>
+      <p style="margin:2px 0;color:#57534e;font-size:13px;">{{customer_name}} · {{customer_phone}}</p>
+      <p style="margin:2px 0;color:#57534e;font-size:13px;">{{customer_address}}</p>
+    </div>
+  </div>
+  <div style="background:#faf6f0;padding:16px 28px;text-align:center;color:#a8a29e;font-size:12px;">Cần hỗ trợ? Gọi {{shop_phone}} · GAUBAO</div>
+</div>`;
+
+document.getElementById('tplAdmin').value = TPL_ADMIN;
+document.getElementById('tplCustomer').value = TPL_CUSTOMER;
+
+function copyTa(btn) {
+  const ta = btn.parentElement.querySelector('textarea');
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(() => {
+    const old = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Đã copy!';
+    setTimeout(() => { btn.innerHTML = old; }, 1600);
+  });
+}
+</script>
+</body>
+</html>
