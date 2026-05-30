@@ -40,8 +40,8 @@ window.GAUBAO_SEED = {
   // --- Cấu hình lưu đơn hàng lên Google Sheet ---
   // Chỉ cần nhập URL web app do Google Apps Script tạo.
   sheet: {
-    enabled: false,
-    endpoint: '',
+    enabled: true,
+    endpoint: 'https://script.google.com/macros/s/AKfycbxXBVUvLS0BKFTF-xv8eblhoUPiMclhqhyA9KLX7m7PQylBebquAZkktvB3Mx7T4Fmh/exec',
   },
 
   // --- Cơ sở / chi nhánh ---
